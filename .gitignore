@@ -1,0 +1,8 @@
+._*
+*.a
+*.o
+.vscode
+*.swp
+.DS_Store
+ft_ls
+TEST*
