@@ -35,6 +35,15 @@ int		ls_skip_default(char *d_name)
 	return (*d_name == '.');
 }
 
+int		ls_isdir(char *d_name)
+{
+	struct stat		sb;
+
+	ft_bzero(&sb, sizeof(struct stat));
+	lstat(d_name, &sb);
+	return (S_ISDIR(sb.st_mode));
+}
+
 t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 {
 	DIR				*dirp;
@@ -92,14 +101,17 @@ void	ls_recursion(t_ftls ls, char *d_name, int recursion)
 	ft_lstiter(dlst, ls.print);
 	if (recursion)
 	{
-		write(1, "\n", 1);
 		r = dlst;
 		while (r)
 		{
 			this = ((struct dirent *)r->content)->d_name;
 			r_name = malloc(ft_strlen(d_name) + ft_strlen(this) + 2);
 			r_name = ft_strcat_multi(r_name, d_name, "/", this, NULL);
-			ls_recursion(ls, r_name, recursion);
+			if (ls_isdir(r_name))
+			{
+				write(1, "\n", 1);
+				ls_recursion(ls, r_name, recursion);
+			}
 			free(r_name);
 			r = r->next;
 		}
@@ -126,6 +138,29 @@ void	ls_init(t_ftls *ls, int *op)
 	ls->is_parent = 1;
 }
 
+void	ls_arg_isdir(t_ftls ls, int *ac, char **av)
+{
+	int				i;
+	int				not_dir_count;
+
+	i = 0;
+	not_dir_count = 0;
+	while (av[i])
+	{
+		if(!ls_isdir(av[i]))
+		{
+			ft_printf("ft_ls: %s: No such file or directory\n", av[i]);
+			av[i][0] = LS_NO_DIR;
+			not_dir_count++;
+		}
+		i++;
+	}
+	if (not_dir_count == 0)
+		return ;
+	ft_quicksort((void **)av, 0, *ac - 1, ls.qs_cmp);
+	*ac -= not_dir_count;
+}
+
 int		main(int argc, char **argv)
 {
 	t_ftls			ls;
@@ -135,20 +170,22 @@ int		main(int argc, char **argv)
 
 	options = ft_option128(&argc, &argv);
 	ls_init(&ls, options);
-	ft_quicksort((void **)argv, 1, argc - 1, ls.qs_cmp);
+	ft_quicksort((void **)argv, 1, --argc, ls.qs_cmp);
 	argv[0] = ".";
 	name = (argv[1]) ? &(argv[1]) : argv;
-	i = 0;
-	while (name[i])
+	ls_arg_isdir(ls, &argc, name);
+	i = -1;
+	while (name[++i] && name[i][0] != LS_NO_DIR)
 	{
-		if (argc > 2)
+		if (name[i][0] == LS_NO_DIR)
+			continue ;	
+		if (argc > 1)
 		{
 			ft_putstr(name[i]);
 			write(1, ":\n", 2);
 		}
 		ls_recursion(ls, name[i], TESTBIT(options, 'R'));
-		i++;
-		if (argc > 2 && i < argc - 1)
+		if (argc > 1 && i < argc - 1)
 			write(1, "\n", 1);
 	}
 	free(options);

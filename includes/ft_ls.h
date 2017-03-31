@@ -17,7 +17,23 @@
 # include <dirent.h>
 # include <sys/stat.h>
 
-# define LS_OPTIONS		"1ARaf"
+# define LS_OPTIONS		"1ARafr"
+# define LS_NO_DIR		127
+
+typedef struct			s_lslongform
+{
+	char				mode[10];
+	int					num_links;
+	char				*owner;
+	int					owner_len;
+	char				*group;
+	int					group_len;
+	int					num_bytes;
+	time_t				time;
+	char				*name;
+	int					*name_len;
+	int					file_type;
+}						t_lslongform;
 
 typedef struct			s_ftls
 {
