@@ -13,14 +13,19 @@
 #ifndef FT_LS_H
 # define FT_LS_H
 
-# include "get_next_line.h"
 # include "ft_printf.h"
 # include <dirent.h>
 # include <sys/stat.h>
 
+# define LS_OPTIONS		"1ARaf"
+
 typedef struct			s_ftls
 {
-		
+	int					(*skip)(char *d_name);
+	int					(*ms_cmp)(const t_list *a, const t_list *b);
+	int					(*qs_cmp)(const void *, const void *);
+	void				(*print)(t_list *elem);
+	char				is_parent;
 }						t_ftls;
 
 #endif
