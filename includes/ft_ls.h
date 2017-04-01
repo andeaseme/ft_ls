@@ -18,7 +18,8 @@
 # include <sys/stat.h>
 
 # define LS_OPTIONS		"1ARafr"
-# define LS_NO_DIR		127
+# define LS_NO_DIR		1
+# define LS_NO_FILE		1
 
 typedef struct			s_lslongform
 {
@@ -41,7 +42,17 @@ typedef struct			s_ftls
 	int					(*ms_cmp)(const t_list *a, const t_list *b);
 	int					(*qs_cmp)(const void *, const void *);
 	void				(*print)(t_list *elem);
-	char				is_parent;
+	char				is_parent										: 1;
+	char				is_recursion									: 1;
 }						t_ftls;
+
+int						ls_namecmp(const t_list *a, const t_list *b);
+int						ls_namecmp_neg(const t_list *a, const t_list *b);
+int						ls_strcmp_neg(const void *a, const void *b);
+
+int						ls_skip_A(char *d_name);
+int						ls_skip_default(char *d_name);
+int						ls_isfile(char *d_name);
+int						ls_isdir(char *d_name);
 
 #endif

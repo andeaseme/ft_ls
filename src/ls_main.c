@@ -1,49 +1,5 @@
 #include "ft_ls.h"
 
-int		ls_namecmp(const t_list *a, const t_list *b)
-{
-	char	*u;
-	char	*v;
-
-	u = ((struct dirent *)a->content)->d_name; 
-	v = ((struct dirent *)b->content)->d_name; 
-	while (*u == *v && (*u != '\0' || *v != '\0'))
-	{
-		u++;
-		v++;
-	}
-	return ((unsigned char)*u - (unsigned char)*v);
-}
-
-int		ls_namecmp_neg(const t_list *a, const t_list *b)
-{
-	return (ls_namecmp(b, a));
-}
-
-int		ls_strcmp_neg(const void *a, const void *b)
-{
-	return (ft_strcmp(b, a));
-}
-
-int		ls_skip_A(char *d_name)
-{
-	return (!ft_strcmp(d_name, ".") ? 1 : !ft_strcmp(d_name, ".."));
-}
-
-int		ls_skip_default(char *d_name)
-{
-	return (*d_name == '.');
-}
-
-int		ls_isdir(char *d_name)
-{
-	struct stat		sb;
-
-	ft_bzero(&sb, sizeof(struct stat));
-	lstat(d_name, &sb);
-	return (S_ISDIR(sb.st_mode));
-}
-
 t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 {
 	DIR				*dirp;
@@ -81,7 +37,7 @@ void	ls_print_1(t_list *elem)
 	write(1, "\n", 1);
 }
 
-void	ls_recursion(t_ftls ls, char *d_name, int recursion)
+void	ls_recursion(t_ftls ls, char *d_name)
 {
 	t_list			*dlst;
 	t_list			*r;
@@ -99,7 +55,7 @@ void	ls_recursion(t_ftls ls, char *d_name, int recursion)
 	}
 	ft_mergesort(&dlst, ls.ms_cmp);
 	ft_lstiter(dlst, ls.print);
-	if (recursion)
+	if (ls.is_recursion)
 	{
 		r = dlst;
 		while (r)
@@ -110,7 +66,7 @@ void	ls_recursion(t_ftls ls, char *d_name, int recursion)
 			if (ls_isdir(r_name))
 			{
 				write(1, "\n", 1);
-				ls_recursion(ls, r_name, recursion);
+				ls_recursion(ls, r_name);
 			}
 			free(r_name);
 			r = r->next;
@@ -135,59 +91,84 @@ void	ls_init(t_ftls *ls, int *op)
 		ls->print = &ls_print_1; //tmp until -l print is ready
 	else
 		ls->print = &ls_print_1;
+	ls->is_recursion = TESTBIT(op, 'R');
 	ls->is_parent = 1;
 }
 
-void	ls_arg_isdir(t_ftls ls, int *ac, char **av)
+void	ls_arg_notfile(char **av)
 {
 	int				i;
-	int				not_dir_count;
 
 	i = 0;
-	not_dir_count = 0;
 	while (av[i])
 	{
-		if(!ls_isdir(av[i]))
+		if(!ls_isfile(av[i]))
 		{
 			ft_printf("ft_ls: %s: No such file or directory\n", av[i]);
-			av[i][0] = LS_NO_DIR;
-			not_dir_count++;
+			av[i][0] = LS_NO_FILE;
 		}
 		i++;
 	}
-	if (not_dir_count == 0)
-		return ;
-	ft_quicksort((void **)av, 0, *ac - 1, ls.qs_cmp);
-	*ac -= not_dir_count;
+}
+
+void	ls_arg_notdir(char **av, char *is_first)
+{
+	int				i;
+
+	i = 0;
+	while (av[i])
+	{
+		if(av[i][0] != LS_NO_FILE && !ls_isdir(av[i]))
+		{
+			ft_putstr(av[i]);
+			write(1, "\n", 2);
+			av[i][0] = LS_NO_DIR;
+			*is_first = 0;
+		}
+		i++;
+	}
+}
+
+void	ls_arg_isdir(t_ftls ls, int ac, char **av, char is_first)
+{
+	int		i;
+
+	i = 0;
+	while (av[i])
+	{
+		if(av[i][0] != LS_NO_FILE && av[i][0] !=LS_NO_DIR)
+		{
+			if (!is_first && ac > 1 && i < ac + 1)
+				write(1, "\n", 1);
+			else
+				is_first = 0;
+			if (ac > 1)
+			{
+				ft_putstr(av[i]);
+				write(1, ":\n", 2);
+			}
+			ls_recursion(ls, av[i]);
+		}
+		i++;
+	}
 }
 
 int		main(int argc, char **argv)
 {
 	t_ftls			ls;
-	int				i;
 	int				*options;
-	char			**name;
+	char			is_first;
 
 	options = ft_option128(&argc, &argv);
 	ls_init(&ls, options);
-	ft_quicksort((void **)argv, 1, --argc, ls.qs_cmp);
-	argv[0] = ".";
-	name = (argv[1]) ? &(argv[1]) : argv;
-	ls_arg_isdir(ls, &argc, name);
-	i = -1;
-	while (name[++i] && name[i][0] != LS_NO_DIR)
-	{
-		if (name[i][0] == LS_NO_DIR)
-			continue ;	
-		if (argc > 1)
-		{
-			ft_putstr(name[i]);
-			write(1, ":\n", 2);
-		}
-		ls_recursion(ls, name[i], TESTBIT(options, 'R'));
-		if (argc > 1 && i < argc - 1)
-			write(1, "\n", 1);
-	}
 	free(options);
+	if (argv[1])
+		ft_quicksort((void **)(++argv), 0, (--argc) - 1, ls.qs_cmp);
+	else
+		argv[0] = ".";
+	ls_arg_notfile(argv);
+	is_first = 1;
+	ls_arg_notdir(argv, &is_first);
+	ls_arg_isdir(ls, argc, argv, is_first);
 	return (1);
 }
