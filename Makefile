@@ -24,7 +24,7 @@ CFLAGS = $(HEADERS) -Wall -Wextra -Werror
 LIBFT =	$(LDIR)/libft.a
 DEPS =	$(IDIR)/ft_ls.h
 
-_OBJ =	ls_main.o ls_compare.o ls_bool.o
+_OBJ =	ls_main.o ls_compare.o ls_bool.o ls_print.o ls_arg_handler.o
 OBJ :=	$(addprefix $(ODIR)/,$(_OBJ))
 
 all: $(NAME)

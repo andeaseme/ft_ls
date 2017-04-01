@@ -5,8 +5,8 @@ int		ls_namecmp(const t_list *a, const t_list *b)
 	char	*u;
 	char	*v;
 
-	u = ((struct dirent *)a->content)->d_name; 
-	v = ((struct dirent *)b->content)->d_name; 
+	u = (char *)a->content; 
+	v = (char *)b->content; 
 	while (*u == *v && (*u != '\0' || *v != '\0'))
 	{
 		u++;

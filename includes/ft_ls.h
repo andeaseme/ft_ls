@@ -18,13 +18,18 @@
 # include <sys/stat.h>
 
 # define LS_OPTIONS		"1ARafr"
+
+/*
+**	LS_NO_DIR and LS_NO_FILE must be a value from the ascii table [0..127]
+**	but not NULL nor a valid filename character
+*/
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
 
-typedef struct			s_lslongform
+typedef struct			s_lslong
 {
 	char				mode[10];
-	int					num_links;
+	nlink_t				nlink;
 	char				*owner;
 	int					owner_len;
 	char				*group;
@@ -34,13 +39,14 @@ typedef struct			s_lslongform
 	char				*name;
 	int					*name_len;
 	int					file_type;
-}						t_lslongform;
+}						t_lslong;
 
 typedef struct			s_ftls
 {
 	int					(*skip)(char *d_name);
 	int					(*ms_cmp)(const t_list *a, const t_list *b);
 	int					(*qs_cmp)(const void *, const void *);
+	void				(*print_name)(char *name);
 	void				(*print)(t_list *elem);
 	char				is_parent										: 1;
 	char				is_recursion									: 1;
@@ -54,5 +60,18 @@ int						ls_skip_A(char *d_name);
 int						ls_skip_default(char *d_name);
 int						ls_isfile(char *d_name);
 int						ls_isdir(char *d_name);
+
+void					ls_print_1(t_list *elem);
+void					ls_print_1_name(char *name);
+void					ls_print_l(t_list *elem);
+void					ls_print_l_name(char *name);
+
+void					ls_arg_notfile(char **av);
+void					ls_arg_notdir(t_ftls ls, char **av, char *is_first);
+void					ls_arg_isdir(t_ftls ls, int ac, char **av, char is_first);
+
+void					ls_recursion(t_ftls ls, char *d_name);
+
+void					ls_set_l(t_list *elem);
 
 #endif
