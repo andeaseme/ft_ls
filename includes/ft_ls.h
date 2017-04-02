@@ -20,7 +20,7 @@
 # include <pwd.h>
 # include <grp.h>
 
-# define LS_OPTIONS		"1ARafr"
+# define LS_OPTIONS		"1ARaflr"
 
 /*
 **	LS_NO_DIR and LS_NO_FILE must be a value from the ascii table [0..127]
@@ -28,7 +28,8 @@
 */
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
-# define CAST_LSFILE(a)		((t_lsfile *)a->content)
+# define SIX_MONTH		15770000
+# define CAST_LSFILE(a)	((t_lsfile *)a->content)
 
 typedef struct			s_lsfile
 {
@@ -46,10 +47,13 @@ typedef struct			s_ftls
 	int					(*ms_cmp)(const t_list *a, const t_list *b);
 	int					(*qs_cmp)(const void *, const void *);
 	void				(*print_name)(char *name);
-	void				(*print)(t_list *elem);
-	char				is_parent										: 1;
-	char				is_recursion									: 1;
-	char				is_long											: 1;
+	void				(*print)(t_list *elem, void *);
+	size_t				owner_max;
+	size_t				group_max;
+	size_t				byte_max;
+	unsigned char		is_parent										: 1;
+	unsigned char		is_recursion									: 1;
+	unsigned char		is_long											: 1;
 }						t_ftls;
 
 int						ls_namecmp(const t_list *a, const t_list *b);
@@ -61,17 +65,17 @@ int						ls_skip_default(char *d_name);
 int						ls_isfile(char *d_name);
 int						ls_isdir(char *d_name);
 
-void					ls_print_1(t_list *elem);
-void					ls_print_1_name(char *name);
-void					ls_print_l(t_list *elem);
-void					ls_print_l_name(char *name);
+void					ls_print_1(t_list *elem, void *any);
+void					ls_print_l(t_list *elem, void *ls);
 
 void					ls_arg_notfile(char **av);
-void					ls_arg_notdir(t_ftls ls, char **av, char *is_first);
-void					ls_arg_isdir(t_ftls ls, int ac, char **av, char is_first);
+t_list					*ls_arg_lst(char **av);
+void					ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first);
+void					ls_arg_isdir(t_ftls ls, int ac, t_list *avlst, char is_first);
 
 void					ls_recursion(t_ftls ls, char *d_name);
+t_list					*ls_lstfilenew(char *dirname, char *name, int namlen);
 
-void					ls_set_l(t_list *elem);
+void					ls_set_l(t_list *elem, void *ls);
 
 #endif

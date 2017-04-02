@@ -16,31 +16,57 @@ void	ls_arg_notfile(char **av)
 	}
 }
 
-void	ls_arg_notdir(t_ftls ls, char **av, char *is_first)
+t_list	*ls_arg_lst(char **av)
+{
+	t_list			*dlist;
+	t_list			*last;
+	t_list			*new;
+	int				i;
+
+	dlist = NULL;
+	i = -1;
+	while (++i >= 0 && av[i])
+	{
+		if (av[i][0] == LS_NO_FILE)
+			continue ;
+		new = ls_lstfilenew(".", av[i], ft_strlen(av[i] + 1));
+		if (dlist)
+			ft_lstadd_after(last, new);
+		else
+			dlist = new;
+		last = new;
+	}
+	return (dlist);
+}
+
+void	ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first)
 {
 	int				i;
 
 	i = 0;
-	while (av[i])
+	if (avlst)
+		ft_lstiter2(avlst, &ls, &ls_set_l);
+	while (avlst)
 	{
-		if(av[i][0] != LS_NO_FILE && !ls_isdir(av[i]))
+		if(!ls_isdir(CAST_LSFILE(avlst)->name))
 		{
-			ls.print_name(av[i]);
-			av[i][0] = LS_NO_DIR;
+			ls.print(avlst, &ls);
+			CAST_LSFILE(avlst)->name[0] = LS_NO_DIR;
 			*is_first = 0;
 		}
-		i++;
+		avlst = avlst->next;
 	}
 }
 
-void	ls_arg_isdir(t_ftls ls, int ac, char **av, char is_first)
+void	ls_arg_isdir(t_ftls ls, int ac, t_list *avlst, char is_first)
 {
 	int		i;
 
 	i = 0;
-	while (av[i])
+	while (avlst)
 	{
-		if(av[i][0] != LS_NO_FILE && av[i][0] !=LS_NO_DIR)
+		if(CAST_LSFILE(avlst)->name[0] != LS_NO_FILE 
+			& CAST_LSFILE(avlst)->name[0] !=LS_NO_DIR)
 		{
 			if (!is_first && ac > 1 && i < ac + 1)
 				write(1, "\n", 1);
@@ -48,11 +74,12 @@ void	ls_arg_isdir(t_ftls ls, int ac, char **av, char is_first)
 				is_first = 0;
 			if (ac > 1)
 			{
-				ft_putstr(av[i]);
+				ft_putstr(CAST_LSFILE(avlst)->name);
 				write(1, ":\n", 2);
 			}
-			ls_recursion(ls, av[i]);
+			ls_recursion(ls, CAST_LSFILE(avlst)->name);
 		}
 		i++;
+		avlst = avlst->next;
 	}
 }

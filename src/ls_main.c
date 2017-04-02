@@ -81,14 +81,12 @@ void	ls_recursion(t_ftls ls, char *d_name)
 	if (!(dlst = ls_lstdir(d_name, ls.skip)))
 		return ;
 	ft_mergesort(&dlst, ls.ms_cmp);
-	ft_lstiter(dlst, &ls_set_l);
-	ft_lstiter(dlst, ls.print);
-	if (ls.is_recursion)
-	{
-		r = dlst;
-		while (r)
+	ft_lstiter2(dlst, &ls, &ls_set_l);
+	ft_lstiter2(dlst, &ls, ls.print);
+	if (ls.is_recursion && (r = dlst))
+		while (r && (r_name = CAST_LSFILE(r)->fullname)) //reset here
 		{
-			r_name = CAST_LSFILE(r)->fullname;
+			ft_bzero(&(ls.owner_max), sizeof(ls.owner_max) * 3);
 			if (!ls_skip_A(CAST_LSFILE(r)->name) && ls_isdir(r_name))
 			{
 				write(1, "\n", 1);
@@ -96,7 +94,6 @@ void	ls_recursion(t_ftls ls, char *d_name)
 			}
 			r = r->next;
 		}
-	}
 	ft_lstdel(&dlst, &ls_lstfiledel);
 }
 
@@ -112,9 +109,9 @@ void	ls_init(t_ftls *ls, int *op)
 		ls->qs_cmp = NULL;
 	else if ((ls->ms_cmp = TESTBIT(op, 'r') ? &ls_namecmp_neg : &ls_namecmp))
 		ls->qs_cmp =  TESTBIT(op, 'r') ? &ls_strcmp_neg : &ft_strcmp;
-	if (TESTBIT(op, 'l') && (ls->print_name = &ls_print_l_name))
+	if (TESTBIT(op, 'l'))
 		ls->print = &ls_print_l;
-	else if ((ls->print_name = &ls_print_1_name))
+	else
 		ls->print = &ls_print_1;
 	ls->is_recursion = TESTBIT(op, 'R') ? 1 : 0;
 	ls->is_parent = 1;
@@ -125,8 +122,9 @@ int		main(int argc, char **argv)
 	t_ftls			ls;
 	int				*options;
 	char			is_first;
+	t_list			*avlst;
 
-	options = ft_option128(&argc, &argv);
+	options = ft_option128(&argc, &argv, LS_OPTIONS, "file ...");
 	ls_init(&ls, options);
 	free(options);
 	if (argv[1])
@@ -135,7 +133,9 @@ int		main(int argc, char **argv)
 		argv[0] = ".";
 	ls_arg_notfile(argv);
 	is_first = 1;
-	ls_arg_notdir(ls, argv, &is_first);
-	ls_arg_isdir(ls, argc, argv, is_first);
+	avlst = ls_arg_lst(argv);
+	ls_arg_notdir(ls, avlst, &is_first);
+	ls_arg_isdir(ls, argc, avlst, is_first);
+	ft_lstdel(&avlst, &ls_lstfiledel);
 	return (1);
 }
