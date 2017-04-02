@@ -14,8 +14,11 @@
 # define FT_LS_H
 
 # include "ft_printf.h"
+# include "libft.h"
 # include <dirent.h>
 # include <sys/stat.h>
+# include <pwd.h>
+# include <grp.h>
 
 # define LS_OPTIONS		"1ARafr"
 
@@ -25,21 +28,17 @@
 */
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
+# define CAST_LSFILE(a)		((t_lsfile *)a->content)
 
-typedef struct			s_lslong
+typedef struct			s_lsfile
 {
-	char				mode[10];
-	nlink_t				nlink;
-	char				*owner;
-	int					owner_len;
-	char				*group;
-	int					group_len;
-	int					num_bytes;
-	time_t				time;
 	char				*name;
-	int					*name_len;
-	int					file_type;
-}						t_lslong;
+	int					namelen;
+	char				*fullname;
+	int					fullnamelen;
+	char				mode[12];
+	struct stat			s;
+}						t_lsfile;
 
 typedef struct			s_ftls
 {
@@ -50,6 +49,7 @@ typedef struct			s_ftls
 	void				(*print)(t_list *elem);
 	char				is_parent										: 1;
 	char				is_recursion									: 1;
+	char				is_long											: 1;
 }						t_ftls;
 
 int						ls_namecmp(const t_list *a, const t_list *b);

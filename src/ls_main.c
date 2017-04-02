@@ -1,5 +1,42 @@
 #include "ft_ls.h"
 
+void	ls_lstfiledel(void *content, size_t content_size)
+{
+	t_lsfile	*f;
+
+	if (content_size == 4)
+	{
+		f = content;
+		free(f->name);
+		free(f->fullname);
+		free(f);
+	}
+}
+
+t_list	*ls_lstfilenew(char *dirname, char *name, int namlen) 
+{
+	t_list		*node;
+	t_lsfile	*f;
+
+	if ((node = malloc(sizeof(t_list))))
+	{
+		if (!(f = (t_lsfile *)malloc(sizeof(t_lsfile))))
+		{
+			free(node);
+			return (NULL);
+		}
+		f->fullnamelen = ft_strlen(dirname) + namlen + 2;
+		f->namelen = namlen;
+		f->name = ft_memdup(name, namlen + 1);
+		f->fullname = malloc(f->fullnamelen);
+		f->fullname = ft_strcat_multi(f->fullname, dirname, "/", name, NULL);
+		node->content = (void *)f;
+		node->content_size = 4;
+		node->next = NULL;
+	}
+	return (node);
+}
+
 t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 {
 	DIR				*dirp;
@@ -16,7 +53,7 @@ t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 		{
 			if (skip && skip(dp->d_name))
 				continue ;
-			new = ft_lstnew(dp->d_name, dp->d_namlen + 1);
+			new = ls_lstfilenew(dirname, dp->d_name, dp->d_namlen + 1);
 			if (dlist)
 				ft_lstadd_after(last, new);
 			else
@@ -34,8 +71,6 @@ void	ls_recursion(t_ftls ls, char *d_name)
 	t_list			*r;
 	char			*r_name;
 
-	if (!(dlst = ls_lstdir(d_name, ls.skip)))
-		return ;
 	if (ls.is_parent)
 		ls.is_parent = 0;
 	else
@@ -43,26 +78,26 @@ void	ls_recursion(t_ftls ls, char *d_name)
 		ft_putstr(d_name);
 		write(1, ":\n", 2);
 	}
+	if (!(dlst = ls_lstdir(d_name, ls.skip)))
+		return ;
 	ft_mergesort(&dlst, ls.ms_cmp);
-	//ft_lstiter(dlst, &ls_set_l);
+	ft_lstiter(dlst, &ls_set_l);
 	ft_lstiter(dlst, ls.print);
 	if (ls.is_recursion)
 	{
 		r = dlst;
 		while (r)
 		{
-			r_name = malloc(ft_strlen(d_name) + r->content_size + 2);
-			r_name = ft_strcat_multi(r_name, d_name, "/", r->content, NULL);
-			if (ls_isdir(r_name))
+			r_name = CAST_LSFILE(r)->fullname;
+			if (!ls_skip_A(CAST_LSFILE(r)->name) && ls_isdir(r_name))
 			{
 				write(1, "\n", 1);
 				ls_recursion(ls, r_name);
 			}
-			free(r_name);
 			r = r->next;
 		}
 	}
-	ft_lstfree(&dlst);
+	ft_lstdel(&dlst, &ls_lstfiledel);
 }
 
 void	ls_init(t_ftls *ls, int *op)
@@ -78,8 +113,8 @@ void	ls_init(t_ftls *ls, int *op)
 	else if ((ls->ms_cmp = TESTBIT(op, 'r') ? &ls_namecmp_neg : &ls_namecmp))
 		ls->qs_cmp =  TESTBIT(op, 'r') ? &ls_strcmp_neg : &ft_strcmp;
 	if (TESTBIT(op, 'l') && (ls->print_name = &ls_print_l_name))
-		ls->print = &ls_print_1;
-	else if ((ls->print_name = &ls_print_l_name))
+		ls->print = &ls_print_l;
+	else if ((ls->print_name = &ls_print_1_name))
 		ls->print = &ls_print_1;
 	ls->is_recursion = TESTBIT(op, 'R') ? 1 : 0;
 	ls->is_parent = 1;

@@ -5,8 +5,8 @@ int		ls_namecmp(const t_list *a, const t_list *b)
 	char	*u;
 	char	*v;
 
-	u = (char *)a->content; 
-	v = (char *)b->content; 
+	u = CAST_LSFILE(a)->name; 
+	v = CAST_LSFILE(b)->name; 
 	while (*u == *v && (*u != '\0' || *v != '\0'))
 	{
 		u++;
