@@ -30,6 +30,7 @@
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
 # define SIX_MONTH		15778800
+# define MAX_PATH		1024
 # define CAST_LSFILE(a)	((t_lsfile *)a->content)
 
 typedef struct			s_lsfile

@@ -16,24 +16,34 @@ void	ls_print_l(t_list *elem, void *lsvoid)
 	t_lsfile		*f;
 	t_ftls			*ls;
 	char			*mtime;
+	char			link[MAX_PATH];
+	ssize_t			len;
 
 	ls = (t_ftls *)lsvoid;
 	f = CAST_LSFILE(elem);
 	mtime = ctime(&(f->s.st_mtime));
 	if (f->mode[0] == 'b' || f->mode[0] == 'c') 
-		ft_printf("%s%2d %-*s %-*s %3d, %4d %.7s%.5s %s\n", f->mode, f->s.st_nlink, 
-				ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
-				ls->group_max, getgrgid(f->s.st_gid)->gr_name,
-				major(f->s.st_rdev), minor(f->s.st_rdev), mtime + 4, 
-				(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
-				f->name);
+		ft_printf("%s %2d %-*s %-*s %3d, %4d %.7s%.5s %s", f->mode, 
+			f->s.st_nlink, ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
+			ls->group_max, getgrgid(f->s.st_gid)->gr_name,
+			major(f->s.st_rdev), minor(f->s.st_rdev), mtime + 4, 
+			(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
+			f->name);
 	else
-		ft_printf("%s%2d %-*s %-*s %*d %.7s%.5s %s\n", f->mode, f->s.st_nlink, 
-				ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
-				ls->group_max, getgrgid(f->s.st_gid)->gr_name,
-				ls->byte_max, f->s.st_size, mtime + 4, 
-				(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
-				f->name);
+		ft_printf("%s %2d %-*s %-*s %*d %.7s%.5s %s", 
+			f->mode, f->s.st_nlink, 
+			ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
+			ls->group_max, getgrgid(f->s.st_gid)->gr_name,
+			ls->byte_max, f->s.st_size, mtime + 4, 
+			(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
+			f->name);
+	if (f->mode[0] == 'l')
+	{
+		len = readlink(f->fullname, link, MAX_PATH);
+		link[len] = 0;
+		ft_printf(" -> %s", link);
+	}
+	write(1, "\n", 1);
 }
 
 void	ls_set_mode(t_lsfile *l, struct stat sb)
