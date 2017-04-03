@@ -20,17 +20,34 @@ void	ls_print_l(t_list *elem, void *lsvoid)
 	ls = (t_ftls *)lsvoid;
 	f = CAST_LSFILE(elem);
 	mtime = ctime(&(f->s.st_mtime));
-	ft_printf("%s%2d %-*s %-*s %*d %.7s%.5s %s\n", f->mode, f->s.st_nlink, 
-			ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
-			ls->group_max, getgrgid(f->s.st_gid)->gr_name,
-			ls->byte_max, f->s.st_size, mtime + 4, 
-			(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
-			f->name);
+	if (f->mode[0] == 'b' || f->mode[0] == 'c') 
+		ft_printf("%s%2d %-*s %-*s %3d, %4d %.7s%.5s %s\n", f->mode, f->s.st_nlink, 
+				ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
+				ls->group_max, getgrgid(f->s.st_gid)->gr_name,
+				major(f->s.st_rdev), minor(f->s.st_rdev), mtime + 4, 
+				(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
+				f->name);
+	else
+		ft_printf("%s%2d %-*s %-*s %*d %.7s%.5s %s\n", f->mode, f->s.st_nlink, 
+				ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
+				ls->group_max, getgrgid(f->s.st_gid)->gr_name,
+				ls->byte_max, f->s.st_size, mtime + 4, 
+				(time(NULL) - SIX_MONTH < f->s.st_mtime) ? mtime + 11 : mtime + 19,
+				f->name);
 }
 
 void	ls_set_mode(t_lsfile *l, struct stat sb)
 {
-	l->mode[0] = S_ISDIR(sb.st_mode) ? 'd' : '-';
+	if (S_ISDIR(sb.st_mode))
+		l->mode[0] = 'd';
+	else if (S_ISLNK(sb.st_mode))
+		l->mode[0] = 'l';
+	else if (S_ISCHR(sb.st_mode))
+		l->mode[0] = 'c';
+	else if (S_ISBLK(sb.st_mode))
+		l->mode[0] = 'b';
+	else	
+		l->mode[0] = '-';
 	l->mode[1] = (sb.st_mode & S_IRUSR) ? 'r' : '-';
 	l->mode[2] = (sb.st_mode & S_IWUSR) ? 'w' : '-';
 	l->mode[3] = (sb.st_mode & S_IXUSR) ? 'x' : '-';
@@ -49,7 +66,6 @@ void	ls_set_l(t_list *elem, void *lsvoid)
 	struct stat		sb;
 	t_lsfile		*f;
 	t_ftls			*ls;
-	size_t			v;
 	size_t			len;
 
 	f = CAST_LSFILE(elem);
@@ -59,12 +75,13 @@ void	ls_set_l(t_list *elem, void *lsvoid)
 	ft_memcpy(&(f->s), &sb, sizeof(struct stat));
 	ls = (t_ftls *)lsvoid;
 	ls->owner_max = MAX(ls->owner_max,
-		(size_t)ft_strlen(getpwuid(f->s.st_uid)->pw_name));
+		(size_t)ft_strlen(getpwuid(sb.st_uid)->pw_name));
 	ls->group_max = MAX(ls->group_max,
-		(size_t)ft_strlen(getgrgid(f->s.st_gid)->gr_name));
-	v = (size_t)f->s.st_size;
-	len = 1;
-	while (v /= 10)
-		len++;
+		(size_t)ft_strlen(getgrgid(sb.st_gid)->gr_name));
+	len  = (f->mode[0] == 'b' || f->mode[0] == 'c') ? 9 : 1;
+	if (len == 1)
+		while (sb.st_size /= 10)
+			len++;
 	ls->byte_max = MAX(ls->byte_max, len);
+	ls->nblock += sb.st_blocks;
 }

@@ -17,6 +17,7 @@
 # include "libft.h"
 # include <dirent.h>
 # include <sys/stat.h>
+# include <sys/types.h>
 # include <pwd.h>
 # include <grp.h>
 
@@ -28,7 +29,7 @@
 */
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
-# define SIX_MONTH		15770000
+# define SIX_MONTH		15778800
 # define CAST_LSFILE(a)	((t_lsfile *)a->content)
 
 typedef struct			s_lsfile
@@ -51,6 +52,7 @@ typedef struct			s_ftls
 	size_t				owner_max;
 	size_t				group_max;
 	size_t				byte_max;
+	size_t				nblock;
 	unsigned char		is_parent										: 1;
 	unsigned char		is_recursion									: 1;
 	unsigned char		is_long											: 1;
