@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ls_arg_handler.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: aphan <aphan@student.42.us.org>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/03/28 23:57:01 by aphan             #+#    #+#             */
+/*   Updated: 2017/03/29 21:09:22 by aphan            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ft_ls.h"
 
 void	ls_arg_notfile(char **av)
@@ -7,7 +19,7 @@ void	ls_arg_notfile(char **av)
 	i = 0;
 	while (av[i])
 	{
-		if(!ls_isfile(av[i]))
+		if (!ls_isfile(av[i]))
 		{
 			ft_printf("ft_ls: %s: No such file or directory\n", av[i]);
 			av[i][0] = LS_NO_FILE;
@@ -48,7 +60,7 @@ void	ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first)
 		ft_lstiter2(avlst, &ls, &ls_set_l);
 	while (avlst)
 	{
-		if(!ls_isdir(CAST_LSFILE(avlst)->name))
+		if (!ls_isdir(CAST_LSFILE(avlst)->name))
 		{
 			ls.print(avlst, &ls);
 			CAST_LSFILE(avlst)->name[0] = LS_NO_DIR;
@@ -65,8 +77,8 @@ void	ls_arg_isdir(t_ftls ls, int ac, t_list *avlst, char is_first)
 	i = 0;
 	while (avlst)
 	{
-		if(CAST_LSFILE(avlst)->name[0] != LS_NO_FILE 
-			& CAST_LSFILE(avlst)->name[0] !=LS_NO_DIR)
+		if (CAST_LSFILE(avlst)->name[0] != LS_NO_FILE
+			& CAST_LSFILE(avlst)->name[0] != LS_NO_DIR)
 		{
 			if (!is_first && ac > 1 && i < ac + 1)
 				write(1, "\n", 1);

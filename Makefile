@@ -38,7 +38,10 @@ $(ODIR):
 		mkdir -p $@
 		@echo 'make directory obj'
 
-$(LIBFT):
+force: 
+	@true
+
+$(LIBFT): force
 		$(MAKE) -C $(LDIR)
 
 $(NAME): $(OBJ) $(LIBFT)

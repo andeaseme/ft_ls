@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_option128.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: aphan <aphan@student.42.us.org>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/03/28 23:57:01 by aphan             #+#    #+#             */
+/*   Updated: 2017/03/29 21:09:22 by aphan            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ft_ls.h"
 
-void	ls_lstfiledel(void *content, size_t content_size)
+void			ls_lstfiledel(void *content, size_t content_size)
 {
 	t_lsfile	*f;
 
@@ -13,7 +25,7 @@ void	ls_lstfiledel(void *content, size_t content_size)
 	}
 }
 
-t_list	*ls_lstfilenew(char *dirname, char *name, int namlen) 
+t_list			*ls_lstfilenew(char *dirname, char *name, int namlen)
 {
 	t_list		*node;
 	t_lsfile	*f;
@@ -37,7 +49,7 @@ t_list	*ls_lstfilenew(char *dirname, char *name, int namlen)
 	return (node);
 }
 
-t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
+t_list			*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 {
 	DIR				*dirp;
 	struct dirent	*dp;
@@ -65,35 +77,39 @@ t_list	*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 	return (dlist);
 }
 
-void	ls_recursion(t_ftls ls, char *d_name)
+static int		ls_put_dir_name(char *d_name)
+{
+	ft_putstr(d_name);
+	write(1, ":\n", 2);
+	return (0);
+}
+
+static void		ls_put_total_blocks(size_t nblock)
+{
+	write(1, "total ", 6);
+	ft_putnbr(nblock);
+	write(1, "\n", 1);
+}
+
+void			ls_recursion(t_ftls ls, char *d_name)
 {
 	t_list			*dlst;
 	t_list			*r;
 	char			*r_name;
 
-	if (ls.is_parent)
-		ls.is_parent = 0;
-	else
-	{
-		ft_putstr(d_name);
-		write(1, ":\n", 2);
-	}
+	ls.is_parent = ls.is_parent ? 0 : ls_put_dir_name(d_name);
 	if (!(dlst = ls_lstdir(d_name, ls.skip)))
 		return ;
 	ft_mergesort(&dlst, ls.ms_cmp);
 	ft_lstiter2(dlst, &ls, &ls_set_l);
 	if (ls.is_long)
-	{
-		write(1, "total ", 6);
-		ft_putnbr(ls.nblock);
-		write(1, "\n", 1);
-	}
+		ls_put_total_blocks(ls.nblock);
 	ft_lstiter2(dlst, &ls, ls.print);
 	if (ls.is_recursion && (r = dlst))
 		while (r && (r_name = CAST_LSFILE(r)->fullname))
 		{
 			ft_bzero(&(ls.owner_max), sizeof(ls.owner_max) * 4);
-			if (!ls_skip_A(CAST_LSFILE(r)->name) && ls_isdir(r_name))
+			if (!ls_skip_upper_a(CAST_LSFILE(r)->name) && ls_isdir(r_name))
 			{
 				write(1, "\n", 1);
 				ls_recursion(ls, r_name);
@@ -103,18 +119,21 @@ void	ls_recursion(t_ftls ls, char *d_name)
 	ft_lstdel(&dlst, &ls_lstfiledel);
 }
 
-void	ls_init(t_ftls *ls, int *op)
+void			ls_init(t_ftls *ls, int *op)
 {
 	if (TESTBIT(op, 'a') || TESTBIT(op, 'f'))
 		ls->skip = NULL;
 	else if (TESTBIT(op, 'A'))
-		ls->skip = &ls_skip_A;
+		ls->skip = &ls_skip_upper_a;
 	else
 		ls->skip = &ls_skip_default;
 	if (TESTBIT(op, 'f') && !(ls->ms_cmp = NULL))
 		ls->qs_cmp = NULL;
+	else if (TESTBIT(op, 't')
+		&& ((ls->ms_cmp = TESTBIT(op, 'r') ? &ls_timecmp_neg : &ls_timecmp)))
+		ls->qs_cmp = TESTBIT(op, 'r') ? &ls_qstimecmp_neg : &ls_qstimecmp;
 	else if ((ls->ms_cmp = TESTBIT(op, 'r') ? &ls_namecmp_neg : &ls_namecmp))
-		ls->qs_cmp =  TESTBIT(op, 'r') ? &ls_strcmp_neg : &ft_strcmp;
+		ls->qs_cmp = TESTBIT(op, 'r') ? &ls_strcmp_neg : &ft_strcmp;
 	if (TESTBIT(op, 'l') && (ls->is_long = 1))
 		ls->print = &ls_print_l;
 	else if (!(ls->is_long = 0))
@@ -123,7 +142,7 @@ void	ls_init(t_ftls *ls, int *op)
 	ls->is_parent = 1;
 }
 
-int		main(int argc, char **argv)
+int				main(int argc, char **argv)
 {
 	t_ftls			ls;
 	int				*options;
@@ -143,5 +162,5 @@ int		main(int argc, char **argv)
 	ls_arg_notdir(ls, avlst, &is_first);
 	ls_arg_isdir(ls, argc, avlst, is_first);
 	ft_lstdel(&avlst, &ls_lstfiledel);
-	return (1);
+	return (0);
 }

@@ -21,7 +21,7 @@
 # include <pwd.h>
 # include <grp.h>
 
-# define LS_OPTIONS		"1ARaflr"
+# define LS_OPTIONS		"1ARaflrt"
 
 /*
 **	LS_NO_DIR and LS_NO_FILE must be a value from the ascii table [0..127]
@@ -54,16 +54,20 @@ typedef struct			s_ftls
 	size_t				group_max;
 	size_t				byte_max;
 	size_t				nblock;
-	unsigned char		is_parent										: 1;
-	unsigned char		is_recursion									: 1;
-	unsigned char		is_long											: 1;
+	_Bool				is_parent;
+	_Bool				is_recursion;
+	_Bool				is_long;
 }						t_ftls;
 
 int						ls_namecmp(const t_list *a, const t_list *b);
 int						ls_namecmp_neg(const t_list *a, const t_list *b);
 int						ls_strcmp_neg(const void *a, const void *b);
+int						ls_timecmp(const t_list *a, const t_list *b);
+int						ls_timecmp_neg(const t_list *a, const t_list *b);
+int						ls_qstimecmp(const void *a, const void *b);
+int						ls_qstimecmp_neg(const void *a, const void *b);
 
-int						ls_skip_A(char *d_name);
+int						ls_skip_upper_a(char *d_name);
 int						ls_skip_default(char *d_name);
 int						ls_isfile(char *d_name);
 int						ls_isdir(char *d_name);
@@ -74,7 +78,8 @@ void					ls_print_l(t_list *elem, void *ls);
 void					ls_arg_notfile(char **av);
 t_list					*ls_arg_lst(char **av);
 void					ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first);
-void					ls_arg_isdir(t_ftls ls, int ac, t_list *avlst, char is_first);
+void					ls_arg_isdir(t_ftls ls, int ac,
+										t_list *avlst, char is_first);
 
 void					ls_recursion(t_ftls ls, char *d_name);
 t_list					*ls_lstfilenew(char *dirname, char *name, int namlen);
