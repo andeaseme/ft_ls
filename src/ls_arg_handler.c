@@ -21,7 +21,7 @@ void	ls_arg_notfile(char **av)
 	{
 		if (!ls_isfile(av[i]))
 		{
-			ft_printf("ft_ls: %s: No such file or directory\n", av[i]);
+			ls_error(av[i]);
 			av[i][0] = LS_NO_FILE;
 		}
 		i++;
@@ -41,7 +41,7 @@ t_list	*ls_arg_lst(char **av)
 	{
 		if (av[i][0] == LS_NO_FILE)
 			continue ;
-		new = ls_lstfilenew(".", av[i], ft_strlen(av[i] + 1));
+		new = ls_lstfilenew(NULL, av[i], ft_strlen(av[i]) + 1);
 		if (dlist)
 			ft_lstadd_after(last, new);
 		else
@@ -54,16 +54,28 @@ t_list	*ls_arg_lst(char **av)
 void	ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first)
 {
 	int				i;
+	t_lsfile		*f;
+	char			link[MAX_PATH];
+	ssize_t			len;
 
 	i = 0;
 	if (avlst)
 		ft_lstiter2(avlst, &ls, &ls_set_l);
 	while (avlst)
 	{
-		if (!ls_isdir(CAST_LSFILE(avlst)->name))
+		f = CAST_LSFILE(avlst);
+		if (ls.is_long && f->mode[0] == 'l')
+		{
+			len = readlink(f->name, link, MAX_PATH);
+			link[len] = 0;
+			ls.print(avlst, &ls);
+			f->name[0] = LS_NO_DIR;
+			*is_first = 0;
+		}
+		else if (f->mode[0] != 'l' && f->mode[0] != 'd')
 		{
 			ls.print(avlst, &ls);
-			CAST_LSFILE(avlst)->name[0] = LS_NO_DIR;
+			f->name[0] = LS_NO_DIR;
 			*is_first = 0;
 		}
 		avlst = avlst->next;

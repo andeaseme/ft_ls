@@ -25,7 +25,7 @@ void	ls_print_1(t_list *elem, void *any)
 
 void	ft_print_l_bc(t_lsfile *f, char *mtime, t_ftls *ls)
 {
-	ft_printf("%s %2d %-*s %-*s %3d, %4d %.7s%.5s %s", f->mode,
+	ft_printf("%s  %2d %-*s  %-*s  %3d, %4d %.7s%.5s %s", f->mode,
 		f->s.st_nlink, ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
 		ls->group_max, getgrgid(f->s.st_gid)->gr_name,
 		major(f->s.st_rdev), minor(f->s.st_rdev), mtime + 4,
@@ -35,7 +35,7 @@ void	ft_print_l_bc(t_lsfile *f, char *mtime, t_ftls *ls)
 
 void	ft_print_l_else(t_lsfile *f, char *mtime, t_ftls *ls)
 {
-	ft_printf("%s %2d %-*s %-*s %*d %.7s%.5s %s",
+	ft_printf("%s %2d %-*s  %-*s  %*d %.7s%.5s %s",
 		f->mode, f->s.st_nlink,
 		ls->owner_max, getpwuid(f->s.st_uid)->pw_name,
 		ls->group_max, getgrgid(f->s.st_gid)->gr_name,
@@ -93,6 +93,14 @@ void	ls_set_mode(t_lsfile *l, struct stat sb)
 	l->mode[11] = 0;
 }
 
+void	ls_error(char *filename)
+{
+	ft_putstr_fd("fl_ls: ", 2);
+	ft_putstr_fd(filename, 2);
+	ft_putstr_fd(": ", 2);
+	perror(NULL);
+}
+
 void	ls_set_l(t_list *elem, void *lsvoid)
 {
 	struct stat		sb;
@@ -102,7 +110,8 @@ void	ls_set_l(t_list *elem, void *lsvoid)
 
 	f = CAST_LSFILE(elem);
 	ft_bzero(&sb, sizeof(struct stat));
-	lstat(f->fullname, &sb);
+	if (0 != lstat(f->fullname, &sb))
+		ls_error(f->fullname);
 	ls_set_mode(f, sb);
 	ft_memcpy(&(f->s), &sb, sizeof(struct stat));
 	ls = (t_ftls *)lsvoid;

@@ -20,6 +20,8 @@
 # include <sys/types.h>
 # include <pwd.h>
 # include <grp.h>
+# include <errno.h>
+# include <stdio.h>
 
 # define LS_OPTIONS		"1ARaflrt"
 
@@ -29,6 +31,7 @@
 */
 # define LS_NO_DIR		1
 # define LS_NO_FILE		1
+# define LS_NO_PRINT	1
 # define SIX_MONTH		15778800
 # define MAX_PATH		1024
 # define CAST_LSFILE(a)	((t_lsfile *)a->content)
@@ -83,6 +86,7 @@ void					ls_arg_isdir(t_ftls ls, int ac,
 
 void					ls_recursion(t_ftls ls, char *d_name);
 t_list					*ls_lstfilenew(char *dirname, char *name, int namlen);
+void					ls_error(char *filename);
 
 void					ls_set_l(t_list *elem, void *ls);
 

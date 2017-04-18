@@ -12,6 +12,9 @@
 
 #include "ft_ls.h"
 
+// TODO: manage links properly "./ft_ls -l /tmp"
+// TODO: manage strange files like inside "/dev/fd/"
+
 void			ls_lstfiledel(void *content, size_t content_size)
 {
 	t_lsfile	*f;
@@ -37,11 +40,13 @@ t_list			*ls_lstfilenew(char *dirname, char *name, int namlen)
 			free(node);
 			return (NULL);
 		}
-		f->fullnamelen = ft_strlen(dirname) + namlen + 2;
+		f->fullnamelen = !(dirname) ? namlen + 1
+				: ft_strlen(dirname) + namlen + 2;
 		f->namelen = namlen;
 		f->name = ft_memdup(name, namlen + 1);
 		f->fullname = malloc(f->fullnamelen);
-		f->fullname = ft_strcat_multi(f->fullname, dirname, "/", name, NULL);
+		f->fullname = !(dirname) ? ft_strcat_multi(f->fullname, name, NULL)
+				: ft_strcat_multi(f->fullname, dirname, "/", name, NULL);
 		node->content = (void *)f;
 		node->content_size = 4;
 		node->next = NULL;
@@ -58,8 +63,9 @@ t_list			*ls_lstdir(char *dirname, int (*skip)(char *d_name))
 	t_list			*new;
 
 	dlist = NULL;
-	dirp = opendir(dirname);
-	if (dirp != NULL)
+	if (NULL == (dirp = opendir(dirname)))
+		ls_error(dirname);
+	else
 	{
 		while ((dp = readdir(dirp)) != NULL)
 		{
@@ -101,9 +107,11 @@ void			ls_recursion(t_ftls ls, char *d_name)
 	if (!(dlst = ls_lstdir(d_name, ls.skip)))
 		return ;
 	ft_mergesort(&dlst, ls.ms_cmp);
-	ft_lstiter2(dlst, &ls, &ls_set_l);
 	if (ls.is_long)
+	{
+		ft_lstiter2(dlst, &ls, &ls_set_l);
 		ls_put_total_blocks(ls.nblock);
+	}
 	ft_lstiter2(dlst, &ls, ls.print);
 	if (ls.is_recursion && (r = dlst))
 		while (r && (r_name = CAST_LSFILE(r)->fullname))
@@ -164,3 +172,24 @@ int				main(int argc, char **argv)
 	ft_lstdel(&avlst, &ls_lstfiledel);
 	return (0);
 }
+
+/*
+int		main(void)
+{
+	char	*d_name = "/dev/fd/";
+	t_list	*d_list;
+	t_ftls	ls;
+	struct stat		sb;
+
+	ls.is_long = 1;
+	ls.is_parent = 1;
+	ls.print = &ls_print_l;
+	d_list = ls_lstfilenew(NULL, d_name, ft_strlen(d_name) + 1);
+	perror("meow");
+	lstat(d_name, &sb);
+	perror("meow");
+	ls_set_l(d_list, &ls);
+	ls_print_l(d_list, &ls);
+	return (0);
+}
+*/
