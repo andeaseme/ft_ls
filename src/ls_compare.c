@@ -27,16 +27,6 @@ int		ls_namecmp(const t_list *a, const t_list *b)
 	return ((unsigned char)*u - (unsigned char)*v);
 }
 
-int		ls_namecmp_neg(const t_list *a, const t_list *b)
-{
-	return (ls_namecmp(b, a));
-}
-
-int		ls_strcmp_neg(const void *a, const void *b)
-{
-	return (ft_strcmp(b, a));
-}
-
 int		ls_timecmp(const t_list *a, const t_list *b)
 {
 	struct stat		u;
@@ -52,11 +42,6 @@ int		ls_timecmp(const t_list *a, const t_list *b)
 		return (ls_namecmp(a, b));
 }
 
-int		ls_timecmp_neg(const t_list *a, const t_list *b)
-{
-	return (ls_timecmp(b, a));
-}
-
 int		ls_qstimecmp(const void *a, const void *b)
 {
 	struct stat		u;
@@ -70,9 +55,4 @@ int		ls_qstimecmp(const void *a, const void *b)
 		return ((int)(v.st_mtimespec.tv_nsec - u.st_mtimespec.tv_nsec));
 	else
 		return (ft_strcmp(b, a));
-}
-
-int		ls_qstimecmp_neg(const void *a, const void *b)
-{
-	return (ls_qstimecmp(b, a));
 }

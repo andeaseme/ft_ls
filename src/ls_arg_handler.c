@@ -53,12 +53,10 @@ t_list	*ls_arg_lst(char **av)
 
 void	ls_arg_notdir(t_ftls ls, t_list *avlst, char *is_first)
 {
-	int				i;
 	t_lsfile		*f;
 	char			link[MAX_PATH];
 	ssize_t			len;
 
-	i = 0;
 	if (avlst)
 		ft_lstiter2(avlst, &ls, &ls_set_l);
 	while (avlst)

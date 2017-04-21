@@ -85,8 +85,11 @@ void					ls_arg_isdir(t_ftls ls, int ac,
 										t_list *avlst, char is_first);
 
 void					ls_recursion(t_ftls ls, char *d_name);
-t_list					*ls_lstfilenew(char *dirname, char *name, int namlen);
 void					ls_error(char *filename);
+
+t_list					*ls_lstfilenew(char *dirname, char *name, int namlen);
+void					ls_lstfiledel(void *content, size_t content_size);
+t_list					*ls_lstdir(char *dirname, int (*skip)(char *d_name));
 
 void					ls_set_l(t_list *elem, void *ls);
 
